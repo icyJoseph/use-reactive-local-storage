@@ -1,47 +1,54 @@
 // Reactive Local Storage
-import {
-  useState,
-  ReactNode,
-  useContext,
-  createContext,
-  useCallback,
-  Fragment,
-  useEffect
-} from "react";
+import { useState, useCallback, useEffect } from "react";
 
-const StorageHostContext = createContext<Window | null | undefined>(null);
-
-export const ReactiveStorageProvider = ({
-  className,
-  children
-}: {
-  className?: string;
-  children?: ReactNode;
-}) => {
-  const [ref, setRef] = useState<HTMLIFrameElement | null>(null);
-
-  const hostWindow = ref?.contentWindow;
-
-  return (
-    <Fragment>
-      <iframe
-        ref={setRef}
-        className={className}
-        frameBorder="0"
-        scrolling="no"
-        width="1"
-        height="1"
-        style={{ display: "block", top: 0, left: 0, position: "absolute" }}
-      />
-
-      <StorageHostContext.Provider value={hostWindow}>
-        {children}
-      </StorageHostContext.Provider>
-    </Fragment>
+export const setupReactiveStorage = () => {
+  const frame = document.createElement("iframe");
+  frame.frameBorder = "0";
+  frame.scrolling = "no";
+  frame.width = "1";
+  frame.height = "1";
+  frame.setAttribute(
+    "style",
+    "display:block;top:-9999px;left:-9999px;position:absolute;"
   );
+  frame.src = "javascript:";
+
+  return frame;
 };
 
-type StorageHandler<Result> = (event: StorageEvent) => Result;
+type Listener = (event: StorageEvent) => void;
+
+const initReactiveStorage = () => {
+  const hostFrame = setupReactiveStorage();
+
+  document.body.appendChild(hostFrame);
+
+  const hostWindow = hostFrame?.contentWindow!;
+
+  const listeners: Listener[] = [];
+
+  const handler = (event: StorageEvent) =>
+    listeners.forEach((listener) => listener(event));
+
+  hostWindow.addEventListener("storage", handler, false);
+
+  return {
+    addEventListener: (listener: Listener) => {
+      listeners.push(listener);
+
+      const removeEventListener = () => {
+        const index = listeners.findIndex((fn) => fn === listener);
+
+        listeners.splice(index, 1);
+      };
+
+      return removeEventListener;
+    },
+    close: () => hostWindow.removeEventListener("storage", handler, false)
+  };
+};
+
+const storage = initReactiveStorage();
 
 export const useReactivePersistentState = <Value extends any>(
   key: string,
@@ -49,17 +56,12 @@ export const useReactivePersistentState = <Value extends any>(
   serialize: (value: Value) => string,
   deserialize: (str: string | null) => Value
 ) => {
-  const hostWindow = useContext(StorageHostContext);
-
   const [state, updateState] = useState(
     init instanceof Function ? init() : init
   );
 
   useEffect(() => {
-    if (!hostWindow) return;
-
     const handler = ({ key: updatedKey, newValue }: StorageEvent) => {
-      console.log("handler");
       if (updatedKey !== key) return;
 
       updateState(deserialize(newValue));
@@ -69,19 +71,13 @@ export const useReactivePersistentState = <Value extends any>(
 
     updateState(deserialize(value));
 
-    hostWindow.addEventListener("storage", handler);
+    const removeEventListener = storage.addEventListener(handler);
 
-    return () => hostWindow.removeEventListener("storage", handler);
-  }, [key, hostWindow]);
+    return removeEventListener;
+  }, [key]);
 
   const setState = useCallback(
-    (next: Value | ((prev: Value) => Value)) => {
-      if (typeof window === "undefined") return;
-
-      if (next instanceof Function) {
-        const current = deserialize(window.localStorage.getItem(key));
-        return window.localStorage.setItem(key, serialize(next(current)));
-      }
+    (next: Value) => {
       return window.localStorage.setItem(key, serialize(next));
     },
     [key]
