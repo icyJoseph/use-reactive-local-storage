@@ -57,7 +57,7 @@ When write to the `localStorage`, we serialize our data. When we write to it, we
 
 It is important to be aware of this, because naively, the serialization and deserialization process resolve to new references. So even though the source strings might be the same, we end up with different objects.
 
-Of course one could optimize this away, by keeping a look up table of strings and references, but there's always a trade-off going on, because now we consumre memory storing such a table in memory.
+Of course one could optimize this away, by keeping a look up table of strings and references, but there's always a trade-off going on, because now we consume memory storing such a table in memory.
 
 ## Problem
 
@@ -89,7 +89,7 @@ Third party libraries might update the store too. Perhaps this is a blessing in 
 
 The same goes for browser users. By simply opening the developer tools, users can modify the local storage. It may be possible to recover from changes made by users, but if we are actually doing business logic with a third party library that is making changes to some data in the local storage we are in trouble.
 
-One more effort could be to poll on the local storage. Say every 1 second, read to see if a key we care about has changed.
+One more effort could be to poll on the local storage. Say every second, read to see if a key we care about has changed.
 
 I think, all things consider this is probably where one would end, if forced to.
 
@@ -105,7 +105,7 @@ Zendesk has an API called [Cross-Storage](https://github.com/zendesk/cross-stora
 
 ## Reactive Local Storage
 
-The key insight in all of this, is that an iframe contains its own document context, and if its loaded by us, using a source such as `about:blank` (which has a bunch of issues of its own, see this [resource](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/docs/special_case_urls.md)), we could attach an event listener on the iframe window, and let our application that the local storage has changed.
+The key insight in all of this, is that an iframe contains its own document context, and if its loaded by us, using a source such as `about:blank` (which has a bunch of issues of its own, see this [resource](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/docs/special_case_urls.md)), we could attach an event listener on the iframe window, and let our application know that the local storage has changed.
 
 In particular we could configure our `useLocalStorage` to update the state when such an event happens.
 
