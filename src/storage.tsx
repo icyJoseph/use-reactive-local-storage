@@ -1,7 +1,7 @@
 // Reactive Local Storage
 import { useState, useCallback, useEffect } from "react";
 
-export const setupReactiveStorage = () => {
+const setupReactiveStorage = () => {
   const frame = document.createElement("iframe");
   frame.frameBorder = "0";
   frame.scrolling = "no";
@@ -11,6 +11,7 @@ export const setupReactiveStorage = () => {
     "style",
     "display:block;top:-9999px;left:-9999px;position:absolute;"
   );
+
   frame.src = "javascript:";
 
   return frame;

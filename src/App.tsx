@@ -1,6 +1,6 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { useReactivePersistentState } from "./Storage";
+import { useReactivePersistentState } from "./storage";
 
 const useLocalStorageCounter = () => {
   return useReactivePersistentState(
