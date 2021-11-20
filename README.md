@@ -40,7 +40,7 @@ const useLocalStorage = (key, fallback) => {
 
   useEffect(() => {
     if (prevKey.current !== key) {
-      window.localStorage.deleteItem(key);
+      window.localStorage.removeItem(key);
       prevKey.current = key;
     }
 
@@ -51,7 +51,7 @@ const useLocalStorage = (key, fallback) => {
 };
 ```
 
-A naive implementation might look like the above snippet. Clearing the key if it changes during its current use, and always setting a new value when state changes.
+A naive implementation might look like the snippet above. Clearing the key if it changes during its current use, and always setting a new value when state changes.
 
 When write to the `localStorage`, we serialize our data. When we write to it, we deserialize it.
 
@@ -102,6 +102,8 @@ And yes, there's such an event, but the kicker is that it only fires, if the sto
 This could be used by businesses or malicious players, to track people across domains, by using an iframe that loads a vendor domain.
 
 Zendesk has an API called [Cross-Storage](https://github.com/zendesk/cross-storage) that helps you do this. However, it has gotchas on Safari and other Apple products. Because these, for better or worse, sandbox storage on iframes to the top level domain using them, effectively breaking cross domain storage tracking.
+
+The cross domain local storage uses `postMessage`, and it is rather difficult to debug, if you ever try to, be ready to spend a lot of time setting things up, but it works! The rough plan here is to have a domain load your iframe, and have it send data via `postMessage` to your iframe. Inside your iframe you listen to `message` events, and upgrade the local storage for your domain accordingly. If there's yet another page loading your iframe you can listen to the `storage` event, and update that second domain as you wish.
 
 ## Reactive Local Storage
 
@@ -194,7 +196,7 @@ const initReactiveStorage = () => {
 };
 ```
 
-The `setupReactiveStorage` functions creates an iframe, which `initReactiveStorage` appends to the current document.
+The `setupReactiveStorage` function creates an iframe, which `initReactiveStorage` appends to the current document.
 
 ```ts
 const setupReactiveStorage = () => {
@@ -222,7 +224,7 @@ After Chrome and Brave, I jumped into Firefox, and there between two tabs the co
 
 On a setup with two tabs running the same application, Brave doesn't seem to let the updates happen on the background tab, unless you focus onto it.
 
-The Firefox issue was really strange, because things worked fine for a little moment, and then one of the tabs just became unresponsive to counter changes.
+The Firefox issue was really strange, because things worked fine for a little moment, and then one of the tabs just became unresponsive to counter changes. However using `javascript:` on the iframe source made it work. That's a red flag for me.
 
 There's even an [ESLINT rule](https://eslint.org/docs/rules/no-script-url) against `javascript:`, and [this StackOverflow](https://stackoverflow.com/questions/13497971/what-is-the-matter-with-script-targeted-urls) expands on why it is not ideal.
 
