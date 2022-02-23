@@ -57,7 +57,7 @@ When write to the `localStorage`, we serialize our data. When we write to it, we
 
 It is important to be aware of this, because naively, the serialization and deserialization process resolve to new references. So even though the source strings might be the same, we end up with different objects.
 
-Of course one could optimize this away, by keeping a look up table of strings and references, but there's always a trade-off going on, because now we consume memory storing such a table in memory.
+Of course one could optimize this away, by keeping a look up table of strings and references, but there's always a trade-off going on, because now we consume memory storing such a table.
 
 ## Problem
 
@@ -89,9 +89,9 @@ Third party libraries might update the store too. Perhaps this is a blessing in 
 
 The same goes for browser users. By simply opening the developer tools, users can modify the local storage. It may be possible to recover from changes made by users, but if we are actually doing business logic with a third party library that is making changes to some data in the local storage we are in trouble.
 
-One more effort could be to poll on the local storage. Say every second, read to see if a key we care about has changed.
+One more effort could be to poll on the local storage. Say every second, read to see if a key we care about, has changed.
 
-I think, all things consider this is probably where one would end, if forced to.
+I think, all things consider this is probably where one would stop going forward with a reactive local storage hook.
 
 ## The storage event and cross domain storage
 
