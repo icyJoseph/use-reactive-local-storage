@@ -160,7 +160,7 @@ There is also heavy serialization and deserialization going on, which might make
 
 One way out, would be to bail out on setting state, by reading from the store right before returning from `setState`, serialize the update, and compare both, if it's the same string, don't do anything to the local storage.
 
-> This API, as it, doesn't support passing a function to update state, but it could! I deleted it for this demo.
+> This API, doesn't support passing a function to update state, but it could! In fact, I deleted it for this demo.
 
 In the above snippet, to avoid leaking the iframe to the hook, I have an object called `storage`, which exposes the methods I care about. This is how `storage` is made:
 
