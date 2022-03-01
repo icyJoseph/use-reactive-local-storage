@@ -57,7 +57,7 @@ When write to the `localStorage`, we serialize our data. When we write to it, we
 
 It is important to be aware of this, because naively, the serialization and deserialization process resolve to new references. So even though the source strings might be the same, we end up with different objects.
 
-Of course one could optimize this away, by keeping a look up table of strings and references, but there's always a trade-off going on, because now we consume memory storing such a table.
+Of course one could optimize this away, by keeping a look-up table of strings and references, but there's always a trade-off going on, because now we consume memory storing such a table.
 
 ## Problem
 
@@ -79,7 +79,7 @@ And then instantiate it in different parts of the application, we'll observe tha
 
 We could initially say that, within our application, all communication to the local storage must be made through a set of functions that we are in control of.
 
-It is a stretch, but client side routing works in similar fashion. If you don't use the `Link` provided by the client side router, and take an `a`, anchor, tag instead, your entire application will offload and navigate the browser will navigate to the new route, whereas with the `Link` the affected Components, unmounted or render as necessary.
+It is a stretch, but client side routing works in similar fashion. If you don't use the `Link` provided by the client side router, and use a regular anchor tag instead, your entire application will offload, and the browser will navigate to the new route, whereas with the `Link` the affected Components, unmounted or render as necessary.
 
 At first this would work great, as long as all updates pass through our functions, we can keep the UI in sync.
 
@@ -107,9 +107,9 @@ The cross domain local storage uses `postMessage`, and it is rather difficult to
 
 ## Reactive Local Storage
 
-The key insight in all of this, is that an iframe contains its own document context, and if its loaded by us, using a source such as `about:blank` (which has a bunch of issues of its own, see this [resource](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/docs/special_case_urls.md)), we could attach an event listener on the iframe window, and let our application know that the local storage has changed.
+The key insight in all of this, is that an iframe contains its own document context, and if it's loaded by us, using a source such as `about:blank` (which has a bunch of issues of its own, see this [resource](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/docs/special_case_urls.md)), we could attach an event listener on the iframe window, and let our application know that the local storage has changed.
 
-In particular we could configure our `useLocalStorage` to update the state when such an event happens.
+In particular, we could configure our `useLocalStorage` to update the state when such an event happens.
 
 ```ts
 export const useReactivePersistentState = <Value extends any>(
@@ -153,7 +153,7 @@ A couple of things here:
 
 - Assume we have a reference to an iframe in the current document.
 - `setState`, actually points saves to the current window local storage.
-- Attach an `storage` event listener to the iframe.
+- Attach a `storage` event listener to the iframe.
 - When that event fires, update the React state of the hook.
 
 There is also heavy serialization and deserialization going on, which might make an application way slower than it should be. It seems like a lot to pay for little gain. Even worse, if the state is actually the same, we'll end up creating a new reference anyway.
@@ -224,12 +224,12 @@ After Chrome and Brave, I jumped into Firefox, and there between two tabs the co
 
 On a setup with two tabs running the same application, Brave doesn't seem to let the updates happen on the background tab, unless you focus onto it.
 
-The Firefox issue was really strange, because things worked fine for a little moment, and then one of the tabs just became unresponsive to counter changes. However using `javascript:` on the iframe source made it work. That's a red flag for me.
+The Firefox issue was really strange, because things worked fine for a little moment, and then one of the tabs just became unresponsive to counter changes. However, using `javascript:` on the iframe source made it work. That's a red flag for me.
 
-There's even an [ESLINT rule](https://eslint.org/docs/rules/no-script-url) against `javascript:`, and [this StackOverflow](https://stackoverflow.com/questions/13497971/what-is-the-matter-with-script-targeted-urls) expands on why it is not ideal.
+There's even an [ESLint rule](https://eslint.org/docs/rules/no-script-url) against `javascript:`, and [this Stack Overflow Question](https://stackoverflow.com/questions/13497971/what-is-the-matter-with-script-targeted-urls) expands on why it is not ideal.
 
 ## Closing
 
-This was an experiment with React and the local storage, and how far could we bend the rules of storage. It'd discourage anyone from trying to abstract this into an `npm` package or use it in production.
+This was an experiment with React and the local storage, and how far could we bend the rules of storage. It'd discourage anyone from trying to abstract this into a `npm` package or use it in production.
 
-There's certain risks on the fact that this effectively creates a direct path into your React state, from the local storage API. Such a risk is always present when working the local storage, or taking any user input for that matter, but the `useReactiveLocalStorage` from this study makes that particularly more aggresive.
+There are certain risks on the fact that this effectively creates a direct path into your React state, from the local storage API. Such a risk is always present when working the local storage, or taking any user input for that matter, but the `useReactiveLocalStorage` from this study makes that particularly more aggressive.
